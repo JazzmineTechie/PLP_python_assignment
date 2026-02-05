@@ -1,0 +1,19 @@
+‎my_list = []
+‎print (my_list)
+‎#prints []
+‎my_list = [10, 20, 30, 40] 
+‎print (my_list)
+‎## prints [10,20,30,40]
+‎my_list [2] = 15 
+‎print (my_list)
+‎## prints [10, 20,15,40]
+‎my_list.extend ([50,60,70]) 
+‎print (my_list)
+‎## prints [10,20,15,40,50,60,70]
+‎del my_list[-1]
+‎print (my_list)
+‎## prints [10,20,15,40,50,60]
+‎my_list.sort ()
+‎print (my_list)
+‎## prints [10,15,20,40,50,60]
+‎## '30' does not exist in the list because it was initially replaced by '15'
