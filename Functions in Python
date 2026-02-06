@@ -1,0 +1,67 @@
+def calculate_discount(price, discount_percent):
+    """
+    Calculates the final price after applying a discount.
+    
+    Parameters:
+    price (float): The original price of the item
+    discount_percent (float): The discount percentage
+    
+    Returns:
+    float: Final price after discount (if discount >= 20%), otherwise original price
+    """
+    if discount_percent >= 20:
+        discount_amount = price * (discount_percent / 100)
+        final_price = price - discount_amount
+        return final_price
+    else:
+        return price
+
+# Test cases
+def test_calculate_discount():
+    print("Testing calculate_discount function...\n")
+    
+    # Test case 1: Discount >= 20% (should apply discount)
+    result1 = calculate_discount(100, 25)
+    expected1 = 75.0
+    print(f"Test 1 - Price: ₦100, Discount: 25%")
+    print(f"Expected: ₦{expected1:.2f}, Got: ₦{result1:.2f}")
+    print(f"Status: {'PASS' if result1 == expected1 else 'FAIL'}\n")
+    
+    # Test case 2: Discount < 20% (should not apply discount)
+    result2 = calculate_discount(80, 15)
+    expected2 = 80.0
+    print(f"Test 2 - Price: ₦80, Discount: 15%")
+    print(f"Expected: ₦{expected2:.2f}, Got: ₦{result2:.2f}")
+    print(f"Status: {'PASS' if result2 == expected2 else 'FAIL'}\n")
+    
+    # Test case 3: Exactly 20% discount (boundary case)
+    result3 = calculate_discount(200, 20)
+    expected3 = 160.0
+    print(f"Test 3 - Price: ₦200, Discount: 20%")
+    print(f"Expected: ₦{expected3:.2f}, Got: ₦{result3:.2f}")
+    print(f"Status: {'PASS' if result3 == expected3 else 'FAIL'}\n")
+    
+    # Test case 4: Zero discount
+    result4 = calculate_discount(50, 0)
+    expected4 = 50.0
+    print(f"Test 4 - Price: ₦50, Discount: 0%")
+    print(f"Expected: ₦{expected4:.2f}, Got: ₦{result4:.2f}")
+    print(f"Status: {'PASS' if result4 == expected4 else 'FAIL'}\n")
+    
+    # Test case 5: High discount percentage
+    result5 = calculate_discount(150, 50)
+    expected5 = 75.0
+    print(f"Test 5 - Price: ₦150, Discount: 50%")
+    print(f"Expected: ₦{expected5:.2f}, Got: ₦{result5:.2f}")
+    print(f"Status: {'PASS' if result5 == expected5 else 'FAIL'}\n")
+    
+    # Test case 6: Decimal prices and discounts
+    result6 = calculate_discount(99.99, 25.5)
+    expected6 = 99.99 * (1 - 25.5/100)  # Should be approximately 74.49
+    print(f"Test 6 - Price: ₦99.99, Discount: 25.5%")
+    print(f"Expected: ₦{expected6:.2f}, Got: ₦{result6:.2f}")
+    print(f"Status: {'PASS' if abs(result6 - expected6) < 0.01 else 'FAIL'}\n")
+
+# Run the tests
+if __name__ == "__main__":
+    test_calculate_discount()
