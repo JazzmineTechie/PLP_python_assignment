@@ -1,0 +1,24 @@
+class Food:
+    def __init__(self, name):
+        self.name = name
+
+    def cook(self):
+        return "Cooking..."
+
+
+class PlantainPancake(Food):
+    def __init__(self, ripeness="ripe"):
+        super().__init__("Plantain Pancake")
+        self.ripeness = ripeness
+
+    def cook(self):
+        return f"Frying {self.ripeness} plantain pancake until golden!"
+
+    def recipe(self):
+        return f"1. Mash {self.ripeness} plantains\n2. Mix with egg & flour\n3. Add salt, sugar, vanilla essence or cinammon\n4. Add water or liquid milk and mix to a consistency not watery\n5. Pan-fry\n6. Serve hot!"
+
+
+# Example
+my_pancake = PlantainPancake("medium")
+print(my_pancake.cook())
+print(my_pancake.recipe())
