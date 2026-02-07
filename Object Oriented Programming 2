@@ -1,0 +1,28 @@
+class speak:
+    def sound(self):
+        pass
+
+class Dog(speak):
+    def sound(self):
+        print("bark 🐶")
+
+class Cat(speak):
+    def sound(self):
+        print("meow 😺")
+
+class Snake(speak):
+    def sound(self):
+        print("hiss 🐍")
+        
+class Wolf(speak):
+    def sound(self):
+        print("howl 🐺")
+        
+class Hyena(speak):
+    def sound(self):
+        print("laugh 😂")
+
+# Test the animals speaking
+speak = [Dog(), Cat(), Snake(), Wolf (), Hyena ()]
+for speak in speak:
+    speak.sound()
