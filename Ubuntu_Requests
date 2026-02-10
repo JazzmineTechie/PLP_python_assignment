@@ -1,0 +1,162 @@
+import requests
+import os
+import hashlib
+from urllib.parse import urlparse
+from pathlib import Path
+
+def get_safe_filename(url, content_type):
+    """Extract filename from URL or generate one based on content type"""
+    parsed_url = urlparse(url)
+    filename = os.path.basename(parsed_url.path)
+    
+    # If no filename in URL, create one based on content type
+    if not filename or '.' not in filename:
+        extension = '.jpg'  # default
+        if content_type:
+            if 'png' in content_type:
+                extension = '.png'
+            elif 'gif' in content_type:
+                extension = '.gif'
+            elif 'jpeg' in content_type or 'jpg' in content_type:
+                extension = '.jpg'
+            elif 'webp' in content_type:
+                extension = '.webp'
+        filename = f"downloaded_image{extension}"
+    
+    # Sanitize filename to prevent directory traversal
+    filename = os.path.basename(filename)
+    return filename
+
+def calculate_file_hash(content):
+    """Calculate SHA-256 hash of file content for duplicate detection"""
+    return hashlib.sha256(content).hexdigest()
+
+def is_valid_image_content_type(content_type):
+    """Check if the content type is a valid image type"""
+    if not content_type:
+        return False
+    valid_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/bmp', 'image/tiff']
+    return any(img_type in content_type.lower() for img_type in valid_types)
+
+def main():
+    print("Welcome to the Ubuntu Image Fetcher")
+    print("A tool for mindfully collecting images from the web\n")
+    
+    # Get URLs from user (comma-separated for multiple URLs)
+    urls_input = input("Please enter image URL(s) (separate multiple URLs with commas): ")
+    urls = [url.strip() for url in urls_input.split(',') if url.strip()]
+    
+    if not urls:
+        print("✗ No valid URLs provided.")
+        return
+    
+    # Create directory if it doesn't exist
+    os.makedirs("Fetched_Images", exist_ok=True)
+    
+    # Get existing file hashes to prevent duplicates
+    existing_hashes = set()
+    for filepath in Path("Fetched_Images").glob("*"):
+        if filepath.is_file():
+            try:
+                with open(filepath, 'rb') as f:
+                    existing_hashes.add(hashlib.sha256(f.read()).hexdigest())
+            except Exception:
+                continue  # Skip unreadable files
+    
+    successful_downloads = 0
+    
+    for i, url in enumerate(urls, 1):
+        print(f"\n[{i}/{len(urls)}] Processing: {url}")
+        
+        try:
+            # Set appropriate headers for respectful web scraping
+            headers = {
+                'User-Agent': 'Ubuntu-Image-Fetcher/1.0 (Educational Tool; Respectful Scraping)',
+                'Accept': 'image/*,*/*;q=0.8',
+                'Accept-Language': 'en-US,en;q=0.5',
+                'Accept-Encoding': 'gzip, deflate',
+                'Connection': 'keep-alive',
+            }
+            
+            # Fetch the image with timeout and size limit considerations
+            response = requests.get(url, headers=headers, timeout=15, stream=True)
+            response.raise_for_status()
+            
+            # Check Content-Type header before processing
+            content_type = response.headers.get('content-type', '')
+            if not is_valid_image_content_type(content_type):
+                print(f"✗ Skipping non-image content: {content_type}")
+                continue
+            
+            # Check Content-Length header to avoid huge files
+            content_length = response.headers.get('content-length')
+            if content_length and int(content_length) > 50 * 1024 * 1024:  # 50MB limit
+                print(f"✗ File too large (>50MB): {int(content_length) / (1024*1024):.1f}MB")
+                continue
+            
+            # Read content in chunks to handle large files safely
+            content = b''
+            for chunk in response.iter_content(chunk_size=8192):
+                content += chunk
+                if len(content) > 50 * 1024 * 1024:  # Safety check during download
+                    raise ValueError("File exceeds 50MB limit")
+            
+            # Check for duplicates using hash
+            file_hash = calculate_file_hash(content)
+            if file_hash in existing_hashes:
+                print("✗ Duplicate image detected - skipping")
+                continue
+            
+            # Generate safe filename
+            filename = get_safe_filename(url, content_type)
+            filepath = os.path.join("Fetched_Images", filename)
+            
+            # Handle filename conflicts by adding numbers
+            counter = 1
+            original_filepath = filepath
+            while os.path.exists(filepath):
+                name, ext = os.path.splitext(original_filepath)
+                filepath = f"{name}_{counter}{ext}"
+                counter += 1
+            
+            # Save the image
+            with open(filepath, 'wb') as f:
+                f.write(content)
+            
+            # Add to existing hashes to prevent duplicates in same session
+            existing_hashes.add(file_hash)
+            successful_downloads += 1
+            
+            print(f"✓ Successfully fetched: {os.path.basename(filepath)}")
+            print(f"✓ Saved to: {filepath}")
+            
+        except requests.exceptions.Timeout:
+            print("✗ Connection timeout - server took too long to respond")
+        except requests.exceptions.ConnectionError:
+            print("✗ Connection error - unable to reach the server")
+        except requests.exceptions.HTTPError as e:
+            print(f"✗ HTTP error: {e.response.status_code} - {e.response.reason}")
+        except requests.exceptions.RequestException as e:
+            print(f"✗ Request error: {e}")
+        except ValueError as e:
+            if "File exceeds 50MB limit" in str(e):
+                print("✗ File too large - stopped download for safety")
+            else:
+                print(f"✗ Invalid data: {e}")
+        except OSError as e:
+            print(f"✗ File system error: {e}")
+        except Exception as e:
+            print(f"✗ Unexpected error: {e}")
+    
+    print(f"\n{'='*50}")
+    if successful_downloads > 0:
+        print(f"✓ {successful_downloads} image(s) successfully downloaded!")
+        print("✓ Images organized in Fetched_Images directory for sharing")
+        print("\nConnection strengthened. Community enriched. Respect maintained.")
+    else:
+        print("✗ No images were downloaded.")
+    
+    print(f"{'='*50}")
+
+if __name__ == "__main__":
+    main()
